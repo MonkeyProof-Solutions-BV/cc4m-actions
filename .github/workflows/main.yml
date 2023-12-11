@@ -1,0 +1,24 @@
+name: Run MATLAB Script on GitHub-Hosted Runner
+on: [push]
+env:
+  MONKEYPROOF_LICENSE_FILE_FOLDER: /monkeyproof/licenses
+jobs:
+  cc4m-job:
+    name: Run MATLAB Script
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v1
+      - run: |
+          mkdir "$MONKEYPROOF_LICENSE_FILE_FOLDER"
+          echo "${{ secrets.LICENSE_FILE }}" | base64 --decode > $MONKEYPROOF_LICENSE_FILE_FOLDER/codechecker4matlab.lic
+      - name: Run script
+        uses: matlab-actions/run-command@v1
+        with:
+          command: runCc4m
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: report.sarif.json
