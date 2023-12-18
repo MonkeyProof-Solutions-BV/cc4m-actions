@@ -1,7 +1,7 @@
 name: Run MATLAB Script on GitHub-Hosted Runner
 on: [push]
 env:
-  MONKEYPROOF_LICENSE_FILE_FOLDER: /monkeyproof/licenses
+  MONKEYPROOF_LICENSE_FILE_FOLDER: license-files
 jobs:
   cc4m-job:
     name: Run MATLAB Script
