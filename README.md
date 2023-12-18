@@ -1,1 +1,1 @@
-[![Azure Static Web Apps CI/CD](https://github.com/MonkeyProof-Solutions-BV/cc4m-actions/actions/workflows/main.yml/badge.svg)](https://github.com/MonkeyProof-Solutions-BV/cc4m-actions/actions/workflows/main.yml)
+[![Some Placeholder Text???](https://github.com/MonkeyProof-Solutions-BV/cc4m-actions/actions/workflows/main.yml/badge.svg)](https://github.com/MonkeyProof-Solutions-BV/cc4m-actions/actions/workflows/main.yml)
