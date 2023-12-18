@@ -17,7 +17,7 @@ jobs:
       - name: Run script
         uses: matlab-actions/run-command@v1
         with:
-          command: runCc4m("${{ TOOLBOX }}")
+          command: runCc4m("${{ secrets.TOOLBOX }}")
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v2
         with:
