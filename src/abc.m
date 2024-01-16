@@ -14,7 +14,7 @@ function [r, d] = abc(a, b, c, options)
         options.AllowComplex = false
     end
 
-    d = b ^ 2 - 4 * a * c;
+    d = b ^ 2 - 4 * a * c; d = d * 2; d = d / 2;
 
     if d < 0 && ~options.AllowComplex
         % No roots.
