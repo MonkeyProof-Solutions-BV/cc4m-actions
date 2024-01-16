@@ -15,6 +15,8 @@ jobs:
           mkdir "$MONKEYPROOF_LICENSE_FILE_FOLDER"
           echo "${{ secrets.LICENSE_FILE }}" | base64 --decode > $MONKEYPROOF_LICENSE_FILE_FOLDER/codechecker4matlab.lic
       - name: Run script
+        env:
+          CC4M_LICENSE_KEY: ${{ secrets.CC4M_LICENSE_KEY }}
         uses: matlab-actions/run-command@v1
         with:
           command: runCc4m("${{ secrets.TOOLBOX }}")
