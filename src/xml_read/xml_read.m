@@ -73,12 +73,12 @@ function [tree, RootName, DOMnode] = xml_read(xmlfile, Pref)
 % References:
 %  - Function inspired by Example 3 found in xmlread function.
 %  - Output data structures inspired by xml_toolbox structures.
-% NOTE: The code in this file has been purposefully mangled and does no justice to the original file.
+
 %% default preferences
-DPref.TableName={'tr','td'}; % name of a special tags used to itemize 2D cell arrays
-DPref.ItemName='item'; % name of a special tag used to itemize 1D cell arrays
-DPref.CellItem=false;  % leave 'item' nodes in cell notation
-DPref.ReadAttr=true;   % allow reading attributes
+DPref.TableName= {'tr','td'}; % name of a special tags used to itemize 2D cell arrays
+DPref.ItemName= 'item'; % name of a special tag used to itemize 1D cell arrays
+DPref.CellItem= false;  % leave 'item' nodes in cell notation
+DPref.ReadAttr= true;   % allow reading attributes
 DPref.ReadSpec= true;   % allow reading special nodes: comments, CData, etc.
 DPref.KeepNS= true;   % Keep or strip namespace info
 DPref.Str2Num= 'smart';% convert strings that look like numbers to numbers
@@ -89,12 +89,14 @@ RootOnly= true;   % return root node  with no top level special nodes
 Debug= false;  % show specific errors (true) or general (false)?
 tree= [];
 RootName= [];
-%% Check Matlab Version
+
+%%Check Matlab Version
 v= ver('MATLAB');
 version= str2double(regexp(v.Version, '\d.\d','match','once'));
 if(version<7.1)
 error('Your MATLAB version is too old. You need version 7.1 or newer.');
 end
+
 %% read user preferences
 if(nargin>1)
 if(isfield(Pref, 'TableName')), DPref.TableName = Pref.TableName; end
@@ -111,11 +113,12 @@ if(isfield(Pref, 'Debug'    )), Debug           = Pref.Debug   ;  end
 if(isfield(Pref, 'PreserveSpace')), DPref.PreserveSpace = Pref.PreserveSpace; end
 end
 if ischar(DPref.Str2Num), % convert from character description to numbers
-DPref.Str2Num= find(strcmpi(DPref.Str2Num, {'never', 'smart', 'always'}))-1;
+DPref.Str2Num = find(strcmpi(DPref.Str2Num, {'never', 'smart', 'always'}))-1;
 if isempty(DPref.Str2Num), DPref.Str2Num=1; end % 1-smart by default
 end
+
 %% read xml file using Matlab function
-ifisa(xmlfile, 'org.apache.xerces.dom.DeferredDocumentImpl');
+if isa(xmlfile, 'org.apache.xerces.dom.DeferredDocumentImpl');
 % if xmlfile is a DOMnode than skip the call to xmlread
 try
 try
@@ -142,6 +145,7 @@ end
 end
 end
 Node= DOMnode.getFirstChild;
+
 %% Find the Root node. Also store data from Global Comment and Processing
 %  Instruction nodes, if any.
 GlobalTextNodes= cell(1,3);
@@ -164,6 +168,7 @@ GlobalTextNodes{3}= GlobalComment;
 end
 Node= Node.getNextSibling;
 end
+
 %% parse xml file through calls to recursive DOMnode2struct function
 if(Debug)   % in debuging mode crashes are allowed
 [tree RootName] = DOMnode2struct(RootNode, DPref, 1);
@@ -178,6 +183,7 @@ catch %#ok<CTCH> catch for mablab versions prior to 7.5
 error('Unable to parse XML file %s.',xmlfile);
 end
 end
+
 %% If there were any Global Text nodes than return them
 if(~RootOnly)
 if(~isempty(GlobalProcInst) && DPref.ReadSpec)
@@ -196,14 +202,18 @@ if(~isempty(GlobalTextNodes))
 GlobalTextNodes{1}= RootName;
 RootName= GlobalTextNodes;
 end
+
+
 %% =======================================================================
 %  === DOMnode2struct Function ===========================================
 %  =======================================================================
 function [s TagName LeafNode] = DOMnode2struct(node, Pref, level)
+
 %% === Step 1: Get node name and check if it is a leaf node ==============
 [TagName LeafNode] = NodeName(node, Pref.KeepNS);
 s= []; % initialize output structure
-%%=== Step 2: Process Leaf Nodes (nodes with no children) ===============
+
+%% === Step 2: Process Leaf Nodes (nodes with no children) ===============
 if(LeafNode)
 if(LeafNode>1 && ~Pref.ReadSpec), LeafNode=-1; end % tags only so ignore special nodes
 if(LeafNode>0) % supported leaf node types
@@ -213,7 +223,7 @@ s= char(node.getData);
 if(isempty(s)), s = ' '; end                              % make it a string
 % for some reason current xmlread 'creates' a lot of empty text
 % fields with first chatacter=10 - those will be deleted.
-if(~Pref.PreserveSpace || s(1)==10) 
+if(~Pref.PreserveSpace || s(1)==10)
 if(isspace(s(1)) || isspace(s(end))), s = strtrim(s); end % trim speces is any
 end
 if(LeafNode==1), s=str2var(s, Pref.Str2Num, 0); end       % convert to number(s) if needed
@@ -228,16 +238,18 @@ warning('xml_io_tools:read:LeafRead', ...
 end
 end
 if(LeafNode==3) % ProcessingInstructions need special treatment
-target = strtrim(char(node.getTarget));
+target= strtrim(char(node.getTarget));
 s= [target, ' ', s];
 end
 return % We are done the rest of the function deals with nodes with children
 end
 if(level>Pref.NumLevels+1), return; end % if Pref.NumLevels is reached than we are done
+
 %% === Step 3: Process nodes with children ===============================
 if(node.hasChildNodes)        % children present
 Child= node.getChildNodes; % create array of children nodes
 nChild= Child.getLength;    % number of children
+
 % --- pass 1: how many children with each name -----------------------
 f= [];
 for iChild = 1:nChild        % read in each child
@@ -251,6 +263,7 @@ end                        % end for iChild
 % text_nodes become CONTENT & for some reason current xmlread 'creates' a
 % lot of empty text fields so f.CONTENT value should not be trusted
 if(isfield(f,'CONTENT') && f.CONTENT>2), f.CONTENT=2; end
+
 % --- pass 2: store all the children as struct of cell arrays ----------
 for iChild = 1:nChild        % read in each child
 [c cname cLeaf] = DOMnode2struct(Child.item(iChild-1), Pref, level+1);
@@ -260,10 +273,10 @@ elseif(nChild==1 && cLeaf==1)
 s=c;                     % shortcut for a common case
 else                       % if normal node
 if(level>Pref.NumLevels), continue; end
-n = f.(cname);           % how many of them in the array so far?
+n= f.(cname);           % how many of them in the array so far?
 if(~isfield(s,cname))   % encountered this name for the first time
 if(n==1)              % if there will be only one of them ...
-s.(cname) = c;       % than save it in format it came in
+s.(cname)= c;       % than save it in format it came in
 else                   % if there will be many of them ...
 s.(cname)= cell(1,n);
 s.(cname){1}= c;    % than save as cell array
@@ -276,17 +289,19 @@ end
 end
 end   % for iChild
 end % end if (node.hasChildNodes)
+
 %% === Step 4: Post-process struct's created for nodes with children =====
 if(isstruct(s))
 fields= fieldnames(s);
 nField= length(fields);
+
 %Detect structure that looks like Html table and store it in cell Matrix
 if(nField==1 && strcmpi(fields{1},Pref.TableName{1}))
 tr= s.(Pref.TableName{1});
 fields2= fieldnames(tr{1});
 if(length(fields2)==1 && strcmpi(fields2{1},Pref.TableName{2}))
-%This seems to be a special structure such that for 
-% Pref.TableName = {'tr','td'} 's' corresponds to 
+% This seems to be a special structure such that for
+% Pref.TableName = {'tr','td'} 's' corresponds to
 %    <tr> <td>M11</td> <td>M12</td> </tr>
 %    <tr> <td>M12</td> <td>M22</td> </tr>
 % Recognize it as encoding for 2D struct
@@ -298,6 +313,7 @@ end
 s= Table;
 end
 end
+
 % --- Post-processing: convert 'struct of cell-arrays' to 'array of structs'
 % Example: let say s has 3 fields s.a, s.b & s.c  and each field is an
 % cell-array with more than one cell-element and all 3 have the same length.
@@ -308,7 +324,9 @@ for i=1:nField, vec(i) = f.(fields{i}); end
 if(numel(vec)>1 && vec(1)>1 && var(vec)==0)  % convert from struct of
 s= cell2struct(struct2cell(s), fields, 1); % arrays to array of struct
 end % if anyone knows better way to do above conversion please let me know.
+
 end
+
 %% === Step 5: Process nodes with attributes =============================
 if(node.hasAttributes && Pref.ReadAttr)
 if(~isstruct(s)),              % make into struct if is not already
@@ -325,13 +343,14 @@ s.ATTRIBUTE.(name)= value;   % save again
 end                             % end iAttr loop
 end % done with attributes
 if(~isstruct(s)), return; end %The rest of the code deals with struct's
+
 %% === Post-processing: fields of "s"
 % convert  'cell-array of structs' to 'arrays of structs'
 fields= fieldnames(s);     % get field names
 nField= length(fields);
 for iItem=1:length(s)       % for each struct in the array - usually one
 for iField=1:length(fields)
-field = fields{iField}; % get field name
+field= fields{iField}; % get field name
 % if this is an 'item' field and user want to leave those as cells
 % than skip this one
 if(strcmpi(field, Pref.ItemName) && Pref.CellItem), continue; end
@@ -347,13 +366,15 @@ catch %#ok<CTCH>
 % different fields. If desired, function forceCell2Struct can force
 % them to the same field structure by adding empty fields.
 if(Pref.NoCells)
-s(iItem).(field)= forceCell2Struct(x); %#ok<AGROW>
+s(iItem).(field) = forceCell2Struct(x); %#ok<AGROW>
 end
 end % end catch
 end
 end
 end
+
 %% === Step 4: Post-process struct's created for nodes with children =====
+
 % --- Post-processing: remove special 'item' tags ---------------------
 % many xml writes (including xml_write) use a special keyword to mark
 % arrays of nodes (see xml_write for examples). The code below converts
@@ -364,6 +385,7 @@ s.CONTENT= s.(Pref.ItemName);
 s= rmfield(s,Pref.ItemName);
 ItemContent= Pref.CellItem; % if CellItem than keep s.CONTENT as cells
 end
+
 % --- Post-processing: clean up CONTENT tags ---------------------
 % if s.CONTENT is a cell-array with empty elements at the end than trim
 % the length of this cell-array. Also if s.CONTENT is the only field than
@@ -387,19 +409,23 @@ s= s.CONTENT;        % only child: remove a level
 end
 end
 end
+
+
+
 %% =======================================================================
 %  === forceCell2Struct Function =========================================
 %  =======================================================================
 function s = forceCell2Struct(x)
 % Convert cell-array of structs, where not all of structs have the same
 % fields, to a single array of structs
+
 %% Convert 1D cell array of structs to 2D cell array, where each row
 % represents item in original array and each column corresponds to a unique
 % field name. Array "AllFields" store fieldnames for each column
 AllFields= fieldnames(x{1});     % get field names of the first struct
 CellMat= cell(length(x), length(AllFields));
 for iItem=1:length(x)
-fields= fieldnames(x{iItem});  % get field names of the next struct
+fields = fieldnames(x{iItem});  % get field names of the next struct
 for iField=1:length(fields)     % inspect all fieldnames and find those
 field= fields{iField};       % get field name
 col= find(strcmp(field,AllFields),1);
@@ -412,6 +438,7 @@ end
 end
 %% Convert 2D cell array to array of structs
 s= cell2struct(CellMat, AllFields, 2);
+
 %% =======================================================================
 %  === str2var Function ==================================================
 %  =======================================================================
@@ -426,7 +453,7 @@ s= regexprep(str, digits, ''); % remove all the digits and other allowed charact
 if(~all(~isempty(s)))          % if nothing left than this is probably a number
 if(~isempty(strfind(str, ' '))), option=2; end %if str has white-spaces assume by default that it is not a date string
 if(~isempty(strfind(str, '['))), option=2; end % same with brackets
-str(strfind(str, '\n')) = ';';% parse data tables into 2D arrays, if any
+str(strfind(str,'\n')) = ';';% parse data tables into 2D arrays, if any
 if(option==1)                % the 'smart' option
 try                         % try to convert to a date, like 2007-12-05
 datenum(str);             % if successful than leave it as string
@@ -434,31 +461,33 @@ catch                       %#ok<CTCH> % if this is not a date than ...
 option=2;                 % ... try converting to a number
 end
 end
-if(option==2)
+if (option==2)
 if(attribute)
 num= str2double(str);      % try converting to a single number using sscanf function
-ifisnan(num), return; end  % So, it wasn't really a number after all    
+if isnan(num), return; end  % So, it wasn't really a number after all
 else
 num= str2num(str);         %#ok<ST2NM> % try converting to a single number or array using eval function
 end
 if(isnumeric(num)&& numel(num)>0), val=num; end % if convertion to a single was succesful than save
 end
 elseif((str(1)=='[' && str(end)==']') || (str(1)=='{' && str(end)=='}')) % this looks like a (cell) array encoded as a string
-try 
-val= eval(str); 
+try
+val= eval(str);
 catch              %#ok<CTCH>
-val= str; 
-end                     
+val= str;
+end
 elseif(~attribute)   % see if it is a boolean array with no [] brackets
 str1= lower(str);
 str1= strrep(str1, 'false', '0');
 str1= strrep(str1, 'true' , '1');
-s= regexprep(str1, '[01 \;\,]', ''); % remove all 0/1, spaces, commas and semicolons 
+s= regexprep(str1, '[01 \;\,]', ''); % remove all 0/1, spaces, commas and semicolons
 if(~all(~isempty(s)))          % if nothing left than this is probably a boolean array
 num= str2num(str1); %#ok<ST2NM>
 if(isnumeric(num)&& numel(num)>0), val = (num>0);  end % if convertion was succesful than save as logical
 end
 end
+
+
 %% =======================================================================
 %  === str2varName Function ==============================================
 %  =======================================================================
@@ -476,6 +505,7 @@ str= regexprep(str,'-','_DASH_'  ,'once', 'ignorecase');
 if(~isvarname(str)) && (~iskeyword(str))
 str= genvarname(str);
 end
+
 %% =======================================================================
 %  === NodeName Function =================================================
 %  =======================================================================
@@ -509,10 +539,12 @@ Name= 'PROCESSING_INSTRUCTION';
 LeafNode= 3;
 otherwise
 NodeType= {'ELEMENT','ATTRIBUTE','TEXT','CDATA_SECTION', ...
-'ENTITY_REFERENCE', 'ENTITY', 'PROCESSING_INSTRUCTION', 'COMMENT',...
-'DOCUMENT', 'DOCUMENT_TYPE', 'DOCUMENT_FRAGMENT', 'NOTATION'};
+'ENTITY_REFERENCE','ENTITY', 'PROCESSING_INSTRUCTION', 'COMMENT',...
+'DOCUMENT','DOCUMENT_TYPE', 'DOCUMENT_FRAGMENT', 'NOTATION'};
 Name= char(node.getNodeName);% capture name of the node
 warning('xml_io_tools:read:unkNode',...
 'Unknown node type encountered: %s_NODE (%s)', NodeType{node.getNodeType}, Name);
-LeafNode = -1;
+LeafNode= -1;
 end
+
+
